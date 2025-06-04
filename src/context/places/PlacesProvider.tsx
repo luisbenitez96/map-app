@@ -19,7 +19,6 @@ const INITIAL_STATE: PlacesState = {
 };
 interface Props {
   children: JSX.Element | JSX.Element[];
-  geocoderApi: GeocoderConfig;
 }
 export const geocoderApi = {
   forwardGeocode: async (config: GeocoderConfig) => {
@@ -78,8 +77,6 @@ export const PlacesProvider = ({ children }: Props) => {
     <PlacesContext.Provider
       value={{
         ...state,
-        searchPlacesByTerm: (query: string) =>
-          geocoderApi.forwardGeocode({ query }),
       }}>
       {children}
 
