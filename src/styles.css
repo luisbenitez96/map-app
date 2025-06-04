@@ -7,5 +7,17 @@
   top: 0;
   width: 100vw;
 }
+.search-container {
+  background-color: white;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+  left: 20px;
+  padding: 5px;
+  position: fixed;
+  top: 20px;
+  width: 250px;
+  z-index: 999;
+}
 
 /* el vh es el viewport height, es decir, la altura de la pantalla, el 100 hace referencia al 100% de la altura de la pantalla */

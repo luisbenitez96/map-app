@@ -3,6 +3,11 @@ import { PlacesContext } from "./PlacesContext";
 import { placesReducer } from "./PlacesReducer";
 import { getUserLocation } from "../../helpers";
 
+// Interfaz para el objeto config del geocodificador
+interface GeocoderConfig {
+  query?: string | number[] | undefined;
+  // Añade otras propiedades si son necesarias según la API del geocodificador
+}
 export interface PlacesState {
   isLoading: boolean;
   userLocation?: [number, number];
@@ -14,7 +19,50 @@ const INITIAL_STATE: PlacesState = {
 };
 interface Props {
   children: JSX.Element | JSX.Element[];
+  geocoderApi: GeocoderConfig;
 }
+export const geocoderApi = {
+  forwardGeocode: async (config: GeocoderConfig) => {
+    const features = [];
+    try {
+      const request = `https://nominatim.openstreetmap.org/search?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1`;
+      const response = await fetch(request);
+      const geojson = await response.json();
+      for (const feature of geojson.features) {
+        const center = [
+          feature.bbox[0] + (feature.bbox[2] - feature.bbox[0]) / 2,
+          feature.bbox[1] + (feature.bbox[3] - feature.bbox[1]) / 2,
+        ];
+        const point = {
+          id: String(
+            feature.properties.osm_id ||
+              feature.id ||
+              feature.properties.place_id ||
+              Math.random().toString(36).substring(2)
+          ),
+          type: "Feature" as const,
+          geometry: {
+            type: "Point" as const,
+            coordinates: center,
+          },
+          place_name: feature.properties.display_name,
+          properties: feature.properties,
+          text: feature.properties.display_name,
+          place_type: ["place"],
+          center,
+        };
+        features.push(point);
+      }
+    } catch (e) {
+      console.error(`Failed to forwardGeocode with error: ${e}`);
+    }
+
+    return {
+      type: "FeatureCollection" as const,
+      features,
+    };
+  },
+};
 export const PlacesProvider = ({ children }: Props) => {
   const [state, dispatch] = useReducer(placesReducer, INITIAL_STATE);
 
@@ -30,6 +78,8 @@ export const PlacesProvider = ({ children }: Props) => {
     <PlacesContext.Provider
       value={{
         ...state,
+        searchPlacesByTerm: (query: string) =>
+          geocoderApi.forwardGeocode({ query }),
       }}>
       {children}
 
